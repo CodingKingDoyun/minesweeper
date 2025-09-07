@@ -1,0 +1,134 @@
+/* src/styles.css */
+
+/* 전역 리셋에 가깝게 간단한 초기화 */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans KR', Arial, sans-serif; background:#f5f7fb; color:#333; }
+
+/* 전체 앱 컨테이너: 중앙 정렬 */
+.app {
+  background: #333333;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: start;
+  justify-items: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+/* 헤더 */
+.header {
+  display: grid;
+  grid-auto-flow: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel {
+  background: #222;
+  color: #e33; /* 빨간 전광판 느낌 */
+  padding: 6px 12px;
+  border-radius: 6px;
+  min-width: 70px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: inset 0 -2px 0 rgba(255,255,255,0.1);
+}
+
+.counter {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 20px;
+}
+
+.reset {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  font-size: 22px;
+  box-shadow: 0 2px 0 #ccc, inset 0 1px 0 #fff;
+}
+.reset:active { transform: translateY(1px); }
+
+.level-label {
+  font-size: 14px;
+  color: #555;
+}
+.level-select {
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+/* 보드: CSS Grid로 열 개수를 동적으로 설정 */
+.board {
+  --cols: 9; /* 자바스크립트에서 설정 */
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 28px);
+  gap: 1px;
+  background: #222222;
+  padding: 6px;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.row {
+  display: contents; /* 각 셀을 grid에 직접 배치 */
+}
+
+/* 셀 기본 스타일 */
+.cell {
+  width: 28px;
+  height: 28px;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 16px;
+  display: grid;
+  place-items: center;
+  user-select: none;
+  outline: none;
+}
+
+/* 닫힌 칸(커버) */
+.cell.closed {
+  background: #525252;
+  box-shadow: inset 0 0 0 2px #3b3b3b, inset 0 -2px 0 rgba(0,0,0,0.1);
+}
+
+/* 열린 칸 */
+.cell.open {
+  background: #292929;
+  box-shadow: inset 0 1px 0 rgba(0,0,0,0.06);
+  cursor: default;
+}
+
+/* 깃발 */
+.cell.flag {
+  color: #e33; /* 이모지라 색상 영향은 적지만 텍스트일 때 대비 */
+}
+
+/* 지뢰 */
+.cell.mine {
+  color: #000;
+}
+
+/* 숫자 색상 전통 매핑 */
+.cell.n1 { color: #1976d2; } /* 파랑 */
+.cell.n2 { color: #388e3c; } /* 초록 */
+.cell.n3 { color: #d32f2f; } /* 빨강 */
+.cell.n4 { color: #7b1fa2; } /* 보라 */
+.cell.n5 { color: #e65100; } /* 주황 */
+.cell.n6 { color: #00838f; } /* 청록 */
+.cell.n7 { color: #424242; } /* 진회색 */
+.cell.n8 { color: #616161; } /* 회색 */
+
+/* 도움말 */
+.help { color:#666; font-size: 13px; }
+.help p { margin: 8px 0 0; }
