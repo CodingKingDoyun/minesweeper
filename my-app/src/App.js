@@ -30,7 +30,7 @@ export default function App() {
   }), []);
 
   // 현재 선택된 난이도 키
-  const [level, setLevel] = useState('beginner');
+  const [level, setLevel] = useState('expert');
 
   // 현재 난이도에서의 행, 열, 지뢰 개수
   const { rows, cols, mines } = DIFFICULTIES[level];
