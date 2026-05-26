@@ -3,19 +3,26 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
+/*
+  지뢰찾기 메인 클래스.
+*/
 class Minesweeper extends JFrame {
   public Minesweeper() {
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setTitle("Minesweeper");
     setLayout(new GridLayout(10, 10));
-    setSize(600,600);
+    setSize(600, 600);
     
     int[][] tile = new int[10][10];
     boolean[][] opend = new boolean[10][10];
     
     Random random = new Random();
+  
+    // 게임판 초기화
     for(int i = 0; i < 10; i++) {
       int random_Cols, random_Rows;
+
+      // 지뢰를 중복없이 랜덤 배치함
       do {
         random_Rows = random.nextInt(10);
         random_Cols = random.nextInt(10);
@@ -23,12 +30,16 @@ class Minesweeper extends JFrame {
       tile[random_Rows][random_Cols] = -1;
     }
     
+    // 각 타일의 주변 8칸 지뢰 갯수를 카운트하여 타일에 기록
     for(int rows = 0; rows < 10; rows++){
       for(int cols = 0; cols < 10; cols++){
         for(int isMine_Rows = rows - 1; isMine_Rows <= rows + 1; isMine_Rows++) {
           for(int isMine_Cols = cols - 1; isMine_Cols <= cols + 1; isMine_Cols++) {
+            // 비정상적인 접근을 하면 반복문을 넘어감 (1)현재 타일이 지뢰인지 (2)현재 타일이 게임판을 넘어갔는지
             if(tile[rows][cols] == -1) continue;
             if(isMine_Cols < 0 || isMine_Cols > 9 || isMine_Rows < 0 || isMine_Rows > 9) continue;
+
+            // 지뢰를 찾으면 카운트 올라감
             if(tile[isMine_Rows][isMine_Cols] == -1) tile[rows][cols]++;
           }  
         }
