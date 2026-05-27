@@ -60,6 +60,8 @@ class Minesweeper extends JFrame {
         // ActionListener 안에서 row, col을 참조하기 위해 final 변수 r, c로 복사
         final int r = row, c = col;
         btn[r][c] = new JButton();
+        btn[r][c].setContentAreaFilled(true);
+        btn[r][c].setBackground(Color.DARK_GRAY);
         btn[r][c].addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             JButton btn = (JButton)e.getSource();
@@ -82,15 +84,11 @@ class Minesweeper extends JFrame {
     btn[row][col].setText(tile[row][col] == MINE ? "지뢰" : String.valueOf(value));
     opend[row][col] = true;
 
-    /*
-      setEnabled를 사용하면 숫자의 색상이 사라지지만, 테스트를 위해 임시로 사용
-      테스트가 끝나면 아래에 주석 처리된 removeActionListener 사용
-
-      for(ActionListener al : btn.getActionListeners()) {
-        btn.removeActionListener(al);
-      }
-    */
-    btn[row][col].setEnabled(false);
+    btn[row][col].setBackground(Color.LIGHT_GRAY);
+    btn[row][col].setBorder(BorderFactory.createLoweredBevelBorder());
+    for(ActionListener al : btn[row][col].getActionListeners()) {
+      btn[row][col].removeActionListener(al);
+    }
     
     if(value == 0) {
       for(int dr = -1; dr <= 1; dr++) {
