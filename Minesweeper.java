@@ -3,107 +3,106 @@ import java.awt.event.*;
 import javax.swing.*;
 import java.util.*;
 
-/*
-  지뢰찾기 메인 클래스.
-*/
+// 지뢰찾기 메인 클래스.
 class Minesweeper extends JFrame {
+  // static final 선언 부분은 지뢰 찾기에서 자주 사용되는 상수를 직관적으로 보기 위해 선언한 것임
+  // 아래 상수들은 사용자가 !변경 가능함!
+  static final int SIZE = 10; // 게임판 크기
+  static final int MINE_COUNT = 15; // 지뢰의 갯수
+  
+  // 아래 상수는 사용자가 !변경 불가능함!
+  static final int MINE = -1; // 지뢰를 알아보기 쉽게 하기 위해 선언
+
+  int[][] tile = new int[SIZE][SIZE];
+  boolean[][] opend = new boolean[SIZE][SIZE];
+  JButton[][] btn = new JButton[SIZE][SIZE];
+  
   public Minesweeper() {
-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     setTitle("Minesweeper");
-    setLayout(new GridLayout(10, 10));
     setSize(600, 600);
-    
-    int[][] tile = new int[10][10];
-    boolean[][] opend = new boolean[10][10];
+    setLayout(new GridLayout(SIZE, SIZE));
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     
     Random random = new Random();
   
     // 게임판 초기화
-    for(int i = 0; i < 10; i++) {
+    // TODO: MINE_COUNT가 SIZE * SIZE 이상일 경우 예외 처리 추가
+    for(int i = 0; i < MINE_COUNT; i++) {
       int random_Cols, random_Rows;
 
       // 지뢰를 중복없이 랜덤 배치함
       do {
-        random_Rows = random.nextInt(10);
-        random_Cols = random.nextInt(10);
-      } while(tile[random_Rows][random_Cols] == -1);
-      tile[random_Rows][random_Cols] = -1;
+        random_Rows = random.nextInt(SIZE);
+        random_Cols = random.nextInt(SIZE);
+      } while(tile[random_Rows][random_Cols] == MINE);
+      tile[random_Rows][random_Cols] = MINE;
     }
     
     // 각 타일의 주변 8칸 지뢰 갯수를 카운트하여 타일에 기록
-    for(int rows = 0; rows < 10; rows++){
-      for(int cols = 0; cols < 10; cols++){
+    for(int rows = 0; rows < SIZE; rows++){
+      for(int cols = 0; cols < SIZE; cols++){
         for(int isMine_Rows = rows - 1; isMine_Rows <= rows + 1; isMine_Rows++) {
           for(int isMine_Cols = cols - 1; isMine_Cols <= cols + 1; isMine_Cols++) {
             // 비정상적인 접근을 하면 반복문을 넘어감 (1)현재 타일이 지뢰인지 (2)현재 타일이 게임판을 넘어갔는지
-            if(tile[rows][cols] == -1) continue;
-            if(isMine_Cols < 0 || isMine_Cols > 9 || isMine_Rows < 0 || isMine_Rows > 9) continue;
+            if(tile[rows][cols] == MINE) continue;
+            if(isMine_Cols < 0 || isMine_Cols > SIZE - 1 || isMine_Rows < 0 || isMine_Rows > SIZE - 1) continue;
 
             // 지뢰를 찾으면 카운트 올라감
-            if(tile[isMine_Rows][isMine_Cols] == -1) tile[rows][cols]++;
+            if(tile[isMine_Rows][isMine_Cols] == MINE) tile[rows][cols]++;
           }  
         }
       }
     }
 
-    for(int rows = 0; rows < 10; rows++) {
-      for(int cols = 0; cols < 10; cols++) {
-        final int tile_Value = tile[rows][cols];
-        JButton button = new JButton();
-
-        button.addActionListener(new ActionListener() {
+    // 버튼 생성 및 ActionListener 등록
+    for(int row = 0; row < SIZE; row++) {
+      for(int col = 0; col < SIZE; col++) {
+        // ActionListener 안에서 row, col을 참조하기 위해 final 변수 r, c로 복사
+        final int r = row, c = col;
+        btn[r][c] = new JButton();
+        btn[r][c].addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
             JButton btn = (JButton)e.getSource();
-
-            switch(tile_Value) {
-              case -1:
-                button.setText("지뢰");
-                button.setForeground(Color.GRAY);
-                break;
-              case 0:
-                button.setText("");
-                break;
-              case 1:
-                button.setText("1");
-                button.setForeground(Color.blue);
-                break;
-              case 2:
-                button.setText("2");
-                button.setForeground(Color.green);
-                break;
-              case 3:
-                button.setText("3");
-                button.setForeground(Color.red);
-                break;
-              case 4:
-                button.setText("4");
-                button.setForeground(Color.blue);
-                break;
-              case 5:
-                button.setText("5");
-                button.setForeground(Color.black);
-                break;
-              case 6:
-                button.setText("6");
-                button.setForeground(Color.green);
-                break;
-              case 7:
-                button.setText("7");
-                break;
-              default:
-                button.setText("8");
-                break;
-            }
-            btn.setEnabled(false);
+            open(r, c);
           }
         });
-
-        add(button);
+        add(btn[r][c]);
       }
     }
     setVisible(true);
   }
-  
+
+  // 주변 지뢰가 0인 칸을 재귀 호출하여 연쇄로 열기 위한 메소드
+  void open(int row, int col) {
+    // row와 col이 게임판의 인덱스를 넘어갔는지 반드시 먼저 확인 후 opned배열 확인 해야함
+    if(row < 0 || row > SIZE - 1 || col < 0 || col > SIZE - 1) return;
+    if(opend[row][col]) return;
+
+    int value = tile[row][col];
+    btn[row][col].setText(tile[row][col] == MINE ? "지뢰" : String.valueOf(value));
+    opend[row][col] = true;
+
+    /*
+      setEnabled를 사용하면 숫자의 색상이 사라지지만, 테스트를 위해 임시로 사용
+      테스트가 끝나면 아래에 주석 처리된 removeActionListener 사용
+
+      for(ActionListener al : btn.getActionListeners()) {
+        btn.removeActionListener(al);
+      }
+    */
+    btn[row][col].setEnabled(false);
+    
+    if(value == 0) {
+      for(int dr = -1; dr <= 1; dr++) {
+        for(int dc = -1; dc <= 1; dc++) {
+          if(dr == 0 && dc == 0) continue;
+          // 재귀 호출로 연쇄 열기 시도
+          open(row + dr, col + dc);
+        }
+      }
+    }
+  }
+
   public static void main(String[] args) {
     Minesweeper frame = new Minesweeper();
   }
