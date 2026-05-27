@@ -8,25 +8,27 @@ class Minesweeper extends JFrame {
   // static final 선언 부분은 지뢰 찾기에서 자주 사용되는 상수를 직관적으로 보기 위해 선언한 것임
   // 아래 상수들은 사용자가 !변경 가능함!
   static final int SIZE = 10; // 게임판 크기
-  static final int MINE_COUNT = 15; // 지뢰의 갯수
+  static final int MINE_COUNT = 10; // 지뢰의 갯수
   
   // 아래 상수는 사용자가 !변경 불가능함!
   static final int MINE = -1; // 지뢰를 알아보기 쉽게 하기 위해 선언
 
   int[][] tile = new int[SIZE][SIZE];
   boolean[][] opend = new boolean[SIZE][SIZE];
+  boolean[][] flagged = new boolean[SIZE][SIZE];
   JButton[][] btn = new JButton[SIZE][SIZE];
   
   public Minesweeper() {
     setTitle("Minesweeper");
-    setSize(600, 600);
+    setSize(400, 400);
+    setResizable(false);
     setLayout(new GridLayout(SIZE, SIZE));
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     
     Random random = new Random();
   
     // 게임판 초기화
-    // TODO: MINE_COUNT가 SIZE * SIZE 이상일 경우 예외 처리 추가
+    // TODO: MINE_COUNT가 SIZE * SIZE 이상일 경우 예외 처리 추가
     for(int i = 0; i < MINE_COUNT; i++) {
       int random_Cols, random_Rows;
 
@@ -62,10 +64,30 @@ class Minesweeper extends JFrame {
         btn[r][c] = new JButton();
         btn[r][c].setContentAreaFilled(true);
         btn[r][c].setBackground(Color.DARK_GRAY);
+        btn[r][c].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+
         btn[r][c].addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
+            if(flagged[r][c] == true) return;
             JButton btn = (JButton)e.getSource();
             open(r, c);
+          }
+        });
+
+        btn[r][c].addMouseListener(new MouseAdapter() {
+          public void mousePressed(MouseEvent e) {
+            if(e.getButton() == MouseEvent.BUTTON3) {
+              if(opend[r][c] == true) return;
+              if(flagged[r][c] == false) {
+                flagged[r][c] = true;
+                btn[r][c].setForeground(Color.RED);
+                btn[r][c].setText("깃발");
+              } else {
+                flagged[r][c] = false;
+                btn[r][c].setForeground(Color.DARK_GRAY);
+                btn[r][c].setText("");
+              }
+            }
           }
         });
         add(btn[r][c]);
@@ -79,9 +101,11 @@ class Minesweeper extends JFrame {
     // row와 col이 게임판의 인덱스를 넘어갔는지 반드시 먼저 확인 후 opned배열 확인 해야함
     if(row < 0 || row > SIZE - 1 || col < 0 || col > SIZE - 1) return;
     if(opend[row][col]) return;
+    if(flagged[row][col]) return;
 
     int value = tile[row][col];
-    btn[row][col].setText(tile[row][col] == MINE ? "지뢰" : String.valueOf(value));
+    btn[row][col].setForeground(Color.DARK_GRAY);
+    btn[row][col].setText(tile[row][col] == MINE ? "지뢰" : (value == 0 ? "" : String.valueOf(value)));
     opend[row][col] = true;
 
     btn[row][col].setBackground(Color.LIGHT_GRAY);
