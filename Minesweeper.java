@@ -126,8 +126,33 @@ class Minesweeper extends JFrame {
             if(gameOver == true) return;
             if(flagged[r][c] == true) return;
             if(!timer.isRunning()) timer.start();
-            JButton btn = (JButton)e.getSource();
-            open(r, c);
+
+            // 열린 칸 클릭 시 주변 깃발 개수와 주변 지뢰 개수가 같을 경우 주변 칸 연쇄 열기 작동
+            // 주석 추가 필요
+            if(opend[r][c] == true) {
+              int aroundFlag = 0;
+              for(int isFlagRow = -1; isFlagRow <= 1; isFlagRow++) {
+                for(int isFlagCol = -1; isFlagCol <= 1; isFlagCol++) {
+                  if(isFlagRow == 0 && isFlagCol == 0) continue;
+                  int nr = r + isFlagRow, nc = c + isFlagCol;
+                  if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                  if(flagged[nr][nc]) aroundFlag++;
+                }
+              }
+              if(aroundFlag == tile[r][c]) {
+                for(int aroundFlagRow = -1; aroundFlagRow <= 1; aroundFlagRow++) {
+                  for(int aroundFlagCol = -1; aroundFlagCol <= 1; aroundFlagCol++) {
+                    if(aroundFlagRow == 0 && aroundFlagCol == 0) continue;
+                    int nr = r + aroundFlagRow, nc = c + aroundFlagCol;
+                    if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                    if(flagged[nr][nc]) continue;
+                    open(nr, nc);
+                  }
+                }
+              } 
+            } else {
+              open(r, c);
+            }
           }
         });
         
@@ -183,22 +208,20 @@ class Minesweeper extends JFrame {
         // 게임 오버시 모든 지뢰 위치 표시
         for(int r = 0; r < SIZE; r++) {
           for(int c = 0; c < SIZE; c++) {
-            if(tile[r][c] != -1) continue;
-            btn[r][c].setText("지뢰");
-            btn[r][c].setBackground(Color.LIGHT_GRAY);
-            btn[r][c].setBorder(BorderFactory.createLoweredBevelBorder());
-
-          }
-        }
-
-        // 게임 오버시 더 이상 버튼이 작동하지 않도록 이벤트 삭제
-        for(int r = 0; r < SIZE; r++) {
-          for(int c = 0; c < SIZE; c++) {
-            for(ActionListener al : btn[r][c].getActionListeners()) {
-              btn[r][c].removeActionListener(al);
+            if(flagged[r][c] == true && tile[r][c] != -1) {
+              btn[r][c].setText("X");
+              btn[r][c].setBackground(Color.LIGHT_GRAY);
+              btn[r][c].setBorder(BorderFactory.createLoweredBevelBorder());
             }
+            if(tile[r][c] == -1 && flagged[r][c] == false) {
+              btn[r][c].setText("지뢰");
+              btn[r][c].setBackground(Color.LIGHT_GRAY);
+              btn[r][c].setBorder(BorderFactory.createLoweredBevelBorder());
+            }
+
           }
         }
+
         gameOver = true;
         timer.stop();
         return;
@@ -240,13 +263,11 @@ class Minesweeper extends JFrame {
     btn[row][col].setBorder(BorderFactory.createLoweredBevelBorder());
     opendCount++;
     opend[row][col] = true;
-    for(ActionListener al : btn[row][col].getActionListeners()) {
-      btn[row][col].removeActionListener(al);
-    }
 
     if(opendCount == (SIZE * SIZE) - MINE_COUNT) {
       mineLabel.setText("게임 승리!");
       timer.stop();
+      gameOver = true;
     }
     
     if(value == 0) {
@@ -315,7 +336,6 @@ class Minesweeper extends JFrame {
         btn[r][c].setBackground(Color.DARK_GRAY);
         btn[r][c].setForeground(Color.DARK_GRAY);
         btn[r][c].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-
  
         // ActionListener 재등록을 위해 삭제
         for(ActionListener al : btn[r][c].getActionListeners()) {
@@ -328,12 +348,37 @@ class Minesweeper extends JFrame {
             if(gameOver == true) return;
             if(flagged[r][c] == true) return;
             if(!timer.isRunning()) timer.start();
-            open(r, c);
+
+            // 열린 칸 클릭 시 주변 깃발 개수와 주변 지뢰 개수가 같을 경우 주변 칸 연쇄 열기 작동
+            // 주석 추가 필요
+            if(opend[r][c] == true) {
+              int aroundFlag = 0;
+              for(int isFlagRow = -1; isFlagRow <= 1; isFlagRow++) {
+                for(int isFlagCol = -1; isFlagCol <= 1; isFlagCol++) {
+                  if(isFlagRow == 0 && isFlagCol == 0) continue;
+                  int nr = r + isFlagRow, nc = c + isFlagCol;
+                  if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                  if(flagged[nr][nc]) aroundFlag++;
+                }
+              }
+              if(aroundFlag == tile[r][c]) {
+                for(int aroundFlagRow = -1; aroundFlagRow <= 1; aroundFlagRow++) {
+                  for(int aroundFlagCol = -1; aroundFlagCol <= 1; aroundFlagCol++) {
+                    if(aroundFlagRow == 0 && aroundFlagCol == 0) continue;
+                    int nr = r + aroundFlagRow, nc = c + aroundFlagCol;
+                    if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                    if(flagged[nr][nc]) continue;
+                    open(nr, nc);
+                  }
+                }
+              } 
+            } else {
+              open(r, c);
+            }
           }
         });
       }
     }
-
   }
 
   public static void main(String[] args) {
