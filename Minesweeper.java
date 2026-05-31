@@ -38,9 +38,21 @@ class Minesweeper extends JFrame {
   // 게임 승리를 확인 하기 위해 열린 칸 갯수를 체크
   int opendCount = 0;
 
-  // 남은 지뢰 갯수를 표시해주는 레이블. resetGame에서 mineLabel을 사용하기 떄문에 클래스필드로 선언
+  // 아레에 있는 레이블 선언들은 resetGame에서 참조하기 위해 클래스필드로 선언함
+  // 남은 지뢰 갯수를 표시해주는 레이블
   int remainingMines = MINE_COUNT;
   JLabel mineLabel = new JLabel("지뢰: " + remainingMines);
+
+  // 경과 시간을 체크하기 위한 타이머 레이블
+  int elapsedTime = 0;
+  JLabel timeLabel = new JLabel("시간: 0초");
+  // java.util.*, javax.swing.* 둘 다 Timer 클래스가 존재하기 때문에 에러 발생함, javax.swing.Timer로 명시하여 해결
+  javax.swing.Timer timer = new javax.swing.Timer(1000, new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+      elapsedTime++;
+      timeLabel.setText("시간: " + elapsedTime + "초");
+    }
+  });
 
 
   public Minesweeper() {
@@ -92,6 +104,7 @@ class Minesweeper extends JFrame {
     });
     topPanel.add(mineLabel);
     topPanel.add(newGameButton);
+    topPanel.add(timeLabel);
 
     // 게임판 패널 생성
     JPanel gamePanel = new JPanel(new GridLayout(SIZE, SIZE));
@@ -110,7 +123,9 @@ class Minesweeper extends JFrame {
         // 마우스 좌클릭 입력을 받고 타일을 여는 메소드 실행
         btn[r][c].addActionListener(new ActionListener() {
           public void actionPerformed(ActionEvent e) {
+            if(gameOver == true) return;
             if(flagged[r][c] == true) return;
+            if(!timer.isRunning()) timer.start();
             JButton btn = (JButton)e.getSource();
             open(r, c);
           }
@@ -164,7 +179,7 @@ class Minesweeper extends JFrame {
       case -1:
         btn[row][col].setText("지뢰");
         mineLabel.setText("게임 오버!");
-
+      
         // 게임 오버시 모든 지뢰 위치 표시
         for(int r = 0; r < SIZE; r++) {
           for(int c = 0; c < SIZE; c++) {
@@ -185,6 +200,7 @@ class Minesweeper extends JFrame {
           }
         }
         gameOver = true;
+        timer.stop();
         return;
 
       // 각 주변 지뢰 갯수에 따라 케이스 선택
@@ -230,6 +246,7 @@ class Minesweeper extends JFrame {
 
     if(opendCount == (SIZE * SIZE) - MINE_COUNT) {
       mineLabel.setText("게임 승리!");
+      timer.stop();
     }
     
     if(value == 0) {
@@ -249,10 +266,17 @@ class Minesweeper extends JFrame {
     opend = new boolean[SIZE][SIZE];
     flagged = new boolean[SIZE][SIZE];
 
-    opendCount = 0;
-    gameOver = false;
+    // 남은 지뢰 갯수 초기화
     remainingMines = MINE_COUNT;
     mineLabel.setText("지뢰: " + remainingMines);
+    
+    // 경과 시간 초기화
+    elapsedTime = 0;
+    timer.stop();
+    timeLabel.setText("시간: 0초");
+    
+    opendCount = 0;
+    gameOver = false;
 
     // 지뢰 재배치
     Random random = new Random();
@@ -303,6 +327,7 @@ class Minesweeper extends JFrame {
           public void actionPerformed(ActionEvent e) {
             if(gameOver == true) return;
             if(flagged[r][c] == true) return;
+            if(!timer.isRunning()) timer.start();
             open(r, c);
           }
         });
