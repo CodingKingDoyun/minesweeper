@@ -20,23 +20,25 @@ class Minesweeper extends JFrame {
   JButton[][] btn = new JButton[SIZE][SIZE];
 
   /*
-    !MouseAdapter를 사용한 이유는 아래에 적었습니다!
+    !!MouseAdapter를 사용한 이유는 아래에 적었습니다!!
     원인:
-    resetGame에서 addMouseListener(new MouseAdapter) 를 사용하니 객체가 여러개 생성 됨.
+    resetGame에서 addMouseListener(new MouseAdapter) 를 사용하니 새 게임을 불러 올 때 마다 객체가 여러개 생성 됨.
     여러개 생성 되는 걸 막기 위해 removeMouseListener를 사용하니 Swing 내부 리스너까지 지워버리는 현상 발생함.
     Swing 내부 리스너가 삭제되니 새로 addMouseListener를 추가해도 작동 안 함.
     
     해결:
-    MouseAdapter를 배열로 생성하면 지우지 않고 계속해서 참조 가능
-    gameOver값에 따라 동작 여부가 바뀜
+    MouseAdapter를 배열로 생성하고 gameOver의 true, false값으로 removeMouseListener를 하지 않고 계속해서 작동 가능
 
     이 부분은 Claude의 도움을 받았습니다.
-   */ 
+  */ 
   boolean gameOver = false;
   MouseAdapter[][] mouseAdapters = new MouseAdapter[SIZE][SIZE];
   
-  // 게임 승리를 확인 하기 위해 열린 칸 갯수를 체크
+  // 게임 승리를 확인 하기위해 열린 칸 갯수를 체크
   int opendCount = 0;
+
+  // 첫 클릭 이후, 지뢰를 배치하기 위해 선언
+  boolean firstClick = true;
 
   // 아레에 있는 레이블 선언들은 resetGame에서 참조하기 위해 클래스필드로 선언함
   // 남은 지뢰 갯수를 표시해주는 레이블
@@ -54,14 +56,15 @@ class Minesweeper extends JFrame {
     }
   });
 
-
   public Minesweeper() {
+    // 창 설정
     setTitle("Minesweeper");
     setSize(500, 550);
     setResizable(false);
     setLayout(new BorderLayout());
     setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     
+    // 지뢰 랜덤 배치를 위해 선언
     Random random = new Random();
   
     // 게임판 초기화
@@ -83,7 +86,7 @@ class Minesweeper extends JFrame {
           for(int isMine_Cols = cols - 1; isMine_Cols <= cols + 1; isMine_Cols++) {
             // 비정상적인 접근을 하면 반복문을 넘어감 (1)현재 타일이 지뢰인지 (2)현재 타일이 게임판을 넘어갔는지
             if(tile[rows][cols] == MINE) continue;
-            if(isMine_Cols < 0 || isMine_Cols > SIZE - 1 || isMine_Rows < 0 || isMine_Rows > SIZE - 1) continue;
+            if(isOutofBounds(isMine_Rows, isMine_Cols)) continue;
 
             // 지뢰를 찾으면 카운트 올라감
             if(tile[isMine_Rows][isMine_Cols] == MINE) tile[rows][cols]++;
@@ -95,6 +98,8 @@ class Minesweeper extends JFrame {
     // 게임 상단 메뉴 패널 생성
     JPanel topPanel = new JPanel();
     topPanel.setBackground(Color.LIGHT_GRAY);
+
+    // 게임을 초기화 시키는 버튼 생성
     JButton newGameButton = new JButton("새 게임");
     newGameButton.setFocusable(false);
     newGameButton.addActionListener(new ActionListener() {
@@ -102,6 +107,8 @@ class Minesweeper extends JFrame {
         resetGame();
       }
     });
+
+    // 게임 상단 메뉴에 컴포넌트 연결
     topPanel.add(mineLabel);
     topPanel.add(newGameButton);
     topPanel.add(timeLabel);
@@ -128,24 +135,34 @@ class Minesweeper extends JFrame {
             if(!timer.isRunning()) timer.start();
 
             // 열린 칸 클릭 시 주변 깃발 개수와 주변 지뢰 개수가 같을 경우 주변 칸 연쇄 열기 작동
-            // 주석 추가 필요
             if(opend[r][c] == true) {
-              int aroundFlag = 0;
-              for(int isFlagRow = -1; isFlagRow <= 1; isFlagRow++) {
-                for(int isFlagCol = -1; isFlagCol <= 1; isFlagCol++) {
-                  if(isFlagRow == 0 && isFlagCol == 0) continue;
-                  int nr = r + isFlagRow, nc = c + isFlagCol;
-                  if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
-                  if(flagged[nr][nc]) aroundFlag++;
+              int flagCount = 0;
+              // 현재 칸 주변의 깃발 개수를 카운트하여 저장
+              for(int isFlag_Row = -1; isFlag_Row <= 1; isFlag_Row++) {
+                for(int isFlag_Col = -1; isFlag_Col <= 1; isFlag_Col++) {
+                  int nr = r + isFlag_Row, nc = c + isFlag_Col;
+                  
+                  // (1)현재 칸은 탐색하지 않음, (2)탐색할려는 위치가 배열을 넘어가면 넘김
+                  if(isFlag_Row == 0 && isFlag_Col == 0) continue;
+                  if(isOutofBounds(nr, nc)) continue;
+
+                  if(flagged[nr][nc]) flagCount++;
                 }
               }
-              if(aroundFlag == tile[r][c]) {
-                for(int aroundFlagRow = -1; aroundFlagRow <= 1; aroundFlagRow++) {
-                  for(int aroundFlagCol = -1; aroundFlagCol <= 1; aroundFlagCol++) {
-                    if(aroundFlagRow == 0 && aroundFlagCol == 0) continue;
-                    int nr = r + aroundFlagRow, nc = c + aroundFlagCol;
-                    if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+
+              // 열린 칸 클릭 시, 주변의 깃발 개수가 주변의 지뢰 개수가 동일하면 주변 칸에 연쇄 오픈 실행
+              if(flagCount == tile[r][c]) {
+                // 단순히 주변 칸에 접근하는 것이므로 dr, dc로 선언함
+                for(int dr = -1; dr <= 1; dr++) {
+                  for(int dc = -1; dc <= 1; dc++) {
+                    int nr = r + dr, nc = c + dc;
+                    
+                    // 아래 두 조건은 깃발 개수 카운트하는 코드와 동일
+                    if(dr == 0 && dc == 0) continue;
+                    if(isOutofBounds(nr, nc)) continue;
+                    // (3)현재 칸에 깃발이 있다면 넘김
                     if(flagged[nr][nc]) continue;
+
                     open(nr, nc);
                   }
                 }
@@ -192,7 +209,7 @@ class Minesweeper extends JFrame {
   // 주변 지뢰가 0인 칸을 재귀 호출하여 연쇄로 열기 위한 메소드
   void open(int row, int col) {
     // row와 col이 게임판의 인덱스를 넘어갔는지 반드시 먼저 확인 후 opned배열 확인 해야함
-    if(row < 0 || row > SIZE - 1 || col < 0 || col > SIZE - 1) return;
+    if(isOutofBounds(row, col)) return;
     if(opend[row][col]) return;
     if(flagged[row][col]) return;
 
@@ -208,17 +225,17 @@ class Minesweeper extends JFrame {
         // 게임 오버시 모든 지뢰 위치 표시
         for(int r = 0; r < SIZE; r++) {
           for(int c = 0; c < SIZE; c++) {
+            // 깃발이 잘못된 위치에 꽂혀있다면 'X' 표시
             if(flagged[r][c] == true && tile[r][c] != -1) {
               btn[r][c].setText("X");
               btn[r][c].setBackground(Color.LIGHT_GRAY);
               btn[r][c].setBorder(BorderFactory.createLoweredBevelBorder());
             }
-            if(tile[r][c] == -1 && flagged[r][c] == false) {
+            else if(tile[r][c] == -1 && flagged[r][c] == false) {
               btn[r][c].setText("지뢰");
               btn[r][c].setBackground(Color.LIGHT_GRAY);
               btn[r][c].setBorder(BorderFactory.createLoweredBevelBorder());
             }
-
           }
         }
 
@@ -264,17 +281,19 @@ class Minesweeper extends JFrame {
     opendCount++;
     opend[row][col] = true;
 
+    // 게임 승리 조건 확인
     if(opendCount == (SIZE * SIZE) - MINE_COUNT) {
       mineLabel.setText("게임 승리!");
       timer.stop();
       gameOver = true;
     }
     
+    // 현재 칸 주변에 지뢰가 없을 경우 주변 칸에 연쇄 열기 작동
     if(value == 0) {
       for(int dr = -1; dr <= 1; dr++) {
         for(int dc = -1; dc <= 1; dc++) {
           if(dr == 0 && dc == 0) continue;
-          // 재귀 호출로 연쇄 열기 시도
+          // 재귀 호출로 연쇄 열기
           open(row + dr, col + dc);
         }
       }
@@ -319,7 +338,7 @@ class Minesweeper extends JFrame {
           for(int isMine_Cols = cols - 1; isMine_Cols <= cols + 1; isMine_Cols++) {
             // 비정상적인 접근을 하면 반복문을 넘어감 (1)현재 타일이 지뢰인지 (2)현재 타일이 게임판을 넘어갔는지
             if(tile[rows][cols] == MINE) continue;
-            if(isMine_Cols < 0 || isMine_Cols > SIZE - 1 || isMine_Rows < 0 || isMine_Rows > SIZE - 1) continue;
+            if(isOutofBounds(isMine_Rows, isMine_Cols)) continue;
 
             // 지뢰를 찾으면 카운트 올라감
             if(tile[isMine_Rows][isMine_Cols] == MINE) tile[rows][cols]++;
@@ -336,7 +355,7 @@ class Minesweeper extends JFrame {
         btn[r][c].setBackground(Color.DARK_GRAY);
         btn[r][c].setForeground(Color.DARK_GRAY);
         btn[r][c].setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
- 
+
         // ActionListener 재등록을 위해 삭제
         for(ActionListener al : btn[r][c].getActionListeners()) {
           btn[r][c].removeActionListener(al);
@@ -357,7 +376,7 @@ class Minesweeper extends JFrame {
                 for(int isFlagCol = -1; isFlagCol <= 1; isFlagCol++) {
                   if(isFlagRow == 0 && isFlagCol == 0) continue;
                   int nr = r + isFlagRow, nc = c + isFlagCol;
-                  if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                  if(isOutofBounds(nr,nc)) continue;
                   if(flagged[nr][nc]) aroundFlag++;
                 }
               }
@@ -366,7 +385,7 @@ class Minesweeper extends JFrame {
                   for(int aroundFlagCol = -1; aroundFlagCol <= 1; aroundFlagCol++) {
                     if(aroundFlagRow == 0 && aroundFlagCol == 0) continue;
                     int nr = r + aroundFlagRow, nc = c + aroundFlagCol;
-                    if(nr < 0 || nr > SIZE - 1 || nc < 0 || nc > SIZE -1) continue;
+                    if(isOutofBounds(nr,nc)) continue;
                     if(flagged[nr][nc]) continue;
                     open(nr, nc);
                   }
@@ -378,6 +397,15 @@ class Minesweeper extends JFrame {
           }
         });
       }
+    }
+  }
+  
+  // row, col 값이 게임판 배열을 넘어가는지 확인하는 메소드
+  boolean isOutofBounds(int row, int col) {
+    if(row < 0 || row > SIZE - 1 || col < 0 || col > SIZE -1) {
+      return true;
+    } else {
+      return false;
     }
   }
 
