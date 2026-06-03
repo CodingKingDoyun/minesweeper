@@ -55,9 +55,7 @@ minesweeper/
 │   │   ├── gameover.png
 │   │   └── win.png
 │   └── Minesweeper.java
-├── bin/                # 컴파일 결과물 (.gitignore 처리)
-├── .vscode/
-│   └── settings.json
+├── bin/        # 컴파일 결과물 (.gitignore 처리)
 └── README.md
 ```
 
@@ -87,19 +85,22 @@ cd minesweeper
 
 ### 3단계 — 컴파일 및 실행
 
-```bash
-# 컴파일
+**Windows (cmd)**
+```cmd
 javac -d bin src/Minesweeper.java
+xcopy src\fonts bin\fonts /E /I /Y
+xcopy src\images bin\images /E /I /Y
+```
 
-# 리소스 복사 (Windows)
-xcopy src\fonts bin\fonts /E /I /Y   # 폰트 파일 복사
-xcopy src\images bin\images /E /I /Y  # 이미지 파일 복사
+**macOS / Linux / Git Bash**
+```bash
+javac -d bin src/Minesweeper.java
+cp -r src/fonts bin/fonts
+cp -r src/images bin/images
+```
 
-# 리소스 복사 (macOS / Linux)
-cp -r src/fonts bin/fonts    # 폰트 파일 복사
-cp -r src/images bin/images  # 이미지 파일 복사
-
-# 실행
+**공통 — 실행**
+```bash
 java -cp bin Minesweeper
 ```
 
@@ -143,7 +144,7 @@ A classic Minesweeper game implemented with Java Swing.
 
 ## 📸 Screenshots
 
-![Game Screen](docs/screenshot.png)
+![Screenshot](docs/screenshot.png)
 
 ---
 
@@ -185,9 +186,7 @@ minesweeper/
 │   │   ├── gameover.png
 │   │   └── win.png
 │   └── Minesweeper.java
-├── bin/                # Compiled output (excluded via .gitignore)
-├── .vscode/
-│   └── settings.json
+├── bin/        # Compiled output (excluded via .gitignore)
 └── README.md
 ```
 
@@ -217,19 +216,22 @@ cd minesweeper
 
 ### Step 3 — Compile & Run
 
-```bash
-# Compile 
+**Windows (cmd)**
+```cmd
 javac -d bin src/Minesweeper.java
+xcopy src\fonts bin\fonts /E /I /Y
+xcopy src\images bin\images /E /I /Y
+```
 
-# Copy resources (Windows)
-xcopy src\fonts bin\fonts /E /I /Y   # Copy font files
-xcopy src\images bin\images /E /I /Y  # Copy image files
+**macOS / Linux / Git Bash**
+```bash
+javac -d bin src/Minesweeper.java
+cp -r src/fonts bin/fonts
+cp -r src/images bin/images
+```
 
-# Copy resources (macOS / Linux)
-cp -r src/fonts bin/fonts    # Copy font files
-cp -r src/images bin/images  # Copy image files
-
-# Run
+**Common — Run**
+```bash
 java -cp bin Minesweeper
 ```
 
